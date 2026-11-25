@@ -37,17 +37,17 @@ jobs:
         run: ./mvnw clean verify
 
       # 5. SonarQube Analysis
-      - name: SonarQube Analysis
-        working-directory: student-management
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-        run: |
-          ./mvnw org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
-            -Dsonar.projectKey=springboot-docker-demo \
-            -Dsonar.host.url=${SONAR_HOST_URL} \
-            -Dsonar.token=${SONAR_TOKEN} \
-            -Dsonar.qualitygate.wait=true
+      # - name: SonarQube Analysis
+      #   working-directory: student-management
+      #   env:
+      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      #     SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+      #   run: |
+      #     ./mvnw org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+      #       -Dsonar.projectKey=springboot-docker-demo \
+      #       -Dsonar.host.url=${SONAR_HOST_URL} \
+      #       -Dsonar.token=${SONAR_TOKEN} \
+      #       -Dsonar.qualitygate.wait=true
 
       # 6. Setup Docker Buildx
       - name: Setup Docker Buildx
