@@ -72,6 +72,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ./student-management
+          file: ./student-management/Dockerfile
           push: true
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/springboot-demo:latest
@@ -101,3 +102,4 @@ jobs:
               $IMAGE
 
             docker image prune -f
+
