@@ -30,8 +30,8 @@ jobs:
 
       # 3. Maven build and JUnit testing
       - name: Maven Build and Test
+        working-directory: student-management
         run: mvn -B clean verify
-
       # 4. SonarQube code quality analysis
       - name: SonarQube Analysis
         env:
