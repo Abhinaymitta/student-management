@@ -1,21 +1,20 @@
+name: CI-CD Pipeline
+
 on:
   push:
     branches:
       - main
 
 jobs:
-
   build-test-scan-docker-deploy:
-
     runs-on: ubuntu-latest
 
     permissions:
       contents: read
 
     steps:
-
       # 1. Checkout source code
-      - name: Checkout GitHub Repository
+      - name: Checkout Repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -28,43 +27,58 @@ jobs:
           java-version: '21'
           cache: maven
 
-      # 3. Maven build and JUnit testing
-      - name: Maven Build and Test
-        run: mvn -B clean verify
-
-      # 4. SonarQube code quality analysis
-      - name: SonarQube Analysis
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+      # 3. Debug Repository Structure
+      - name: Debug Repository Structure
         run: |
-          mvn -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
-            -Dsonar.projectKey=springboot-docker-demo \
-            -Dsonar.qualitygate.wait=true
+          pwd
+          ls -la
+          find . -name pom.xml
 
-      # 5. Setup Docker Buildx
+      # 4. Grant execute permission to Maven Wrapper
+      - name: Grant Maven Wrapper Permission
+        run: chmod +x student-management/mvnw
+
+      # 5. Build and Test
+      - name: Maven Build and Test
+        working-directory: student-management
+        run: ./mvnw clean verify
+
+      # 6. SonarQube Analysis
+      # - name: SonarQube Analysis
+      #   working-directory: student-management
+      #   env:
+      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      #     SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+      #   run: |
+      #     ./mvnw org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+      #     -Dsonar.projectKey=springboot-docker-demo \
+      #     -Dsonar.host.url=$SONAR_HOST_URL \
+      #     -Dsonar.token=$SONAR_TOKEN \
+      #     -Dsonar.qualitygate.wait=true
+
+      # 7. Setup Docker Buildx
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # 6. Login to Docker Hub
-      - name: Docker Hub Login
+      # 8. Login to DockerHub
+      - name: Login to DockerHub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # 7. Build and Push Docker Image
+      # 9. Build and Push Docker Image
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v6
         with:
-          context: .
+          context: ./student-management
           push: true
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/springboot-demo:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/springboot-demo:${{ github.sha }}
 
-      # 8. Deploy application on Ubuntu Server
-      - name: Deploy Spring Boot Application
+      # 10. Deploy to Ubuntu Server
+      - name: Deploy Application
         uses: appleboy/ssh-action@v1.2.0
         env:
           IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/springboot-demo:${{ github.sha }}
@@ -78,7 +92,6 @@ jobs:
             docker pull $IMAGE
 
             docker stop springboot-app || true
-
             docker rm springboot-app || true
 
             docker run -d \
